@@ -13,6 +13,7 @@ This is a simple Employee Management web application built with Java, Spring MVC
 - Spring MVC (no annotations, XML-based configuration)
 - JSP & JSTL
 - MySQL
+- JDBC
 - Tomcat 9
 - Gradle
 
