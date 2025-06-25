@@ -1,78 +1,49 @@
 package com.example.employee.controller;
 
-import com.example.employee.dao.EmployeeDAO;
 import com.example.employee.model.Employee;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.Controller;
+import com.example.employee.service.EmployeeService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.List;
+@Controller
+public class EmployeeController {
 
-public class EmployeeController implements Controller {
+    @Autowired
+    private EmployeeService employeeService;
 
-    private EmployeeDAO employeeDAO;
-
-    public void setEmployeeDAO(EmployeeDAO employeeDAO) {
-        this.employeeDAO = employeeDAO;
+    @GetMapping({"/", "/employees"})
+    public String listEmployees(Model model) {
+        model.addAttribute("employees", employeeService.getAllEmployees());
+        return "employee-list";
     }
 
-    // Main entry point for SimpleControllerHandlerAdapter
-    @Override
-    public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String path = request.getServletPath();
-        try {
-            if ("/employees".equals(path)) {
-                List<Employee> list = employeeDAO.getAllEmployees();
-                request.setAttribute("employees", list);
-                request.getRequestDispatcher("/WEB-INF/views/employee-list.jsp").forward(request, response);
-            } else if ("/employee/form".equals(path)) {
-                request.setAttribute("employee", new Employee());
-                request.getRequestDispatcher("/WEB-INF/views/employee-form.jsp").forward(request, response);
-            } else if ("/employee/save".equals(path)) {
-                String idStr = request.getParameter("id");
-                String name = request.getParameter("name");
-                String department = request.getParameter("department");
-                String salaryStr = request.getParameter("salary");
-                Employee employee = new Employee();
-                if (idStr != null && !idStr.isEmpty()) {
-                    employee.setId(Integer.parseInt(idStr));
-                }
-                employee.setName(name);
-                employee.setDepartment(department);
-                if (salaryStr != null && !salaryStr.isEmpty()) {
-                    employee.setSalary(Double.parseDouble(salaryStr));
-                }
-                if (employee.getId() > 0) {
-                    employeeDAO.updateEmployee(employee);
-                } else {
-                    employeeDAO.saveEmployee(employee);
-                }
-                response.sendRedirect(request.getContextPath() + "/employees");
-            } else if ("/employee/edit".equals(path)) {
-                String idStr = request.getParameter("id");
-                if (idStr != null && !idStr.isEmpty()) {
-                    int id = Integer.parseInt(idStr);
-                    Employee employee = employeeDAO.getEmployeeById(id);
-                    request.setAttribute("employee", employee);
-                }
-                request.getRequestDispatcher("/WEB-INF/views/employee-form.jsp").forward(request, response);
-            } else if ("/employee/delete".equals(path)) {
-                String idStr = request.getParameter("id");
-                if (idStr != null && !idStr.isEmpty()) {
-                    int id = Integer.parseInt(idStr);
-                    employeeDAO.deleteEmployee(id);
-                }
-                response.sendRedirect(request.getContextPath() + "/employees");
-            } else if ("/".equals(path)) {
-                response.sendRedirect(request.getContextPath() + "/employees");
-            } else {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            }
-        } catch (Exception e) {
-            throw new IOException(e);
+    @GetMapping("/employee/form")
+    public String showForm(@RequestParam(value = "id", required = false) Integer id, Model model) {
+        if (id != null) {
+            model.addAttribute("employee", employeeService.getEmployeeById(id).orElse(new Employee()));
+        } else {
+            model.addAttribute("employee", new Employee());
         }
-        return null;
+        return "employee-form";
+    }
+
+    @PostMapping("/employee/save")
+    public String saveEmployee(@ModelAttribute Employee employee) {
+        employeeService.saveEmployee(employee);
+        return "redirect:/employees";
+    }
+
+    @GetMapping("/employee/edit")
+    public String editEmployee(@RequestParam("id") int id, Model model) {
+        model.addAttribute("employee", employeeService.getEmployeeById(id).orElse(new Employee()));
+        return "employee-form";
+    }
+
+    @GetMapping("/employee/delete")
+    public String deleteEmployee(@RequestParam("id") int id) {
+        employeeService.deleteEmployee(id);
+        return "redirect:/employees";
     }
 }
