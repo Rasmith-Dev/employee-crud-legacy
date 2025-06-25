@@ -17,28 +17,13 @@
         <property name="suffix" value=".jsp" />
     </bean>
 
-    <!-- DataSource -->
-    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-        <property name="driverClassName" value="com.mysql.cj.jdbc.Driver" />
-        <property name="url" value="jdbc:mysql://localhost:3306/employee_db" />
-        <property name="username" value="employee_user" />
-        <property name="password" value="password" />
-    </bean>
-
-    <!-- JdbcTemplate -->
-    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
-        <property name="dataSource" ref="dataSource" />
-    </bean>
-
-    <!-- DAO -->
-    <bean id="employeeDAO" class="com.example.employee.dao.EmployeeDAO">
-        <constructor-arg ref="jdbcTemplate" />
-    </bean>
-
     <!-- Controller with setter injection -->
     <bean id="employeeController" class="com.example.employee.controller.EmployeeController">
         <property name="employeeDAO" ref="employeeDAO" />
     </bean>
+
+    <!-- Import application context for shared beans -->
+    <import resource="application-context.xml"/>
 
     <!-- Handler Mapping -->
     <bean class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
